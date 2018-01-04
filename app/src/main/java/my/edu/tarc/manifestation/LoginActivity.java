@@ -1,31 +1,55 @@
 package my.edu.tarc.manifestation;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import static my.edu.tarc.medicalknowledge.R.layout.activity_login;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 
 public class LoginActivity extends AppCompatActivity {
 
+    EditText editTextUsername, editTextPassword;
     TextView textViewForgotPassword, textViewRegister;
+    ImageButton imageButtonLogin;
 
- //  protected static Context context;
+    public  static  String LOGGED_IN_USER = "LOGGED_IN_USER";
+    String userName;
+    ProgressDialog progressDialog;
+    //  protected static Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(activity_login);
+        setContentView(R.layout.activity_login);
 
         this.setTitle("Login");
 
-     //   context = getApplicationContext();
+        //   context = getApplicationContext();
 
+        editTextUsername = (EditText)findViewById(R.id.editTextUsername);
+        editTextPassword = (EditText)findViewById(R.id.editTextPassword);
         textViewForgotPassword = (TextView)findViewById(R.id.textViewForgotPassword);
         textViewRegister = (TextView)findViewById(R.id.textViewRegister);
+        imageButtonLogin = (ImageButton)findViewById(R.id.imageButtonLogin);
 
         textViewRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -41,7 +65,148 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        imageButtonLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickLogin(v);
+            }
+        });
 
+
+
+    }
+
+    public void onClickLogin(View v){
+        userName = editTextUsername.getText().toString();
+        String PassWord = editTextPassword.getText().toString();
+        String type = "login";
+
+        if (editTextUsername.getText().toString().equals("") && editTextPassword.getText().toString().equals("")) {
+            Toast.makeText(getApplicationContext(), "Please enter your username and password!", Toast.LENGTH_LONG).show();
+        }else if (editTextUsername.getText().toString().equals("")) {
+            Toast.makeText(getApplicationContext(), "Please enter your username!", Toast.LENGTH_LONG).show();
+        }
+        else if (editTextPassword.getText().toString().equals("")) {
+            Toast.makeText(getApplicationContext(), "Please enter your password!", Toast.LENGTH_LONG).show();
+        }else {
+            progressDialog = new ProgressDialog(this);
+            BackgroundWorker backgroundWorker = new BackgroundWorker(this);
+            backgroundWorker.execute(type, userName, PassWord);
+        }
+    }
+
+    private class BackgroundWorker extends AsyncTask<String, Void, String> {
+        private Context context;
+        AlertDialog alertDialog;
+
+        public BackgroundWorker(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String type = params[0];
+            String loginURL = "https://care4life.000webhostapp.com/login_user.php";
+
+            // If the type of the task = login
+            if (type == "login") {
+
+                String username = params[1];
+                String password = params[2];
+
+                try {
+
+                    //Establish HttpURLConnection with POST method
+                    URL url = new URL(loginURL);
+                    HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+                    httpURLConnection.setRequestMethod("POST");
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setDoInput(true);
+
+                    //Set output stream
+                    OutputStream outputStream = httpURLConnection.getOutputStream();
+                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, "UTF-8"));
+                    String post_data = URLEncoder.encode("username", "UTF-8") + "=" + URLEncoder.encode(username, "UTF-8") + "&"
+                            + URLEncoder.encode("password", "UTF-8") + "=" + URLEncoder.encode(password, "UTF-8");
+
+                    bufferedWriter.write(post_data);
+                    bufferedWriter.flush();
+                    bufferedWriter.close();
+                    outputStream.close();
+
+                    //Read the data
+                    InputStream inputStream = httpURLConnection.getInputStream();
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "iso-8859-1"),8);
+                    String result = "";
+                    String line = "";
+
+                    while ((line = bufferedReader.readLine()) != null) {
+                        result += line;
+                    }
+
+                    bufferedReader.close();
+                    inputStream.close();
+                    httpURLConnection.disconnect();
+                    return result;
+
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+
+            // Create an alert dialog and set it's title
+            alertDialog = new AlertDialog.Builder(context).create();
+            alertDialog.setTitle("Login Status");
+
+            if (!progressDialog.isShowing()) ;
+            progressDialog.setMessage("Logging in");
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+
+            // If login failed
+            if (result.equals("login not success")) {
+
+                if (progressDialog.isShowing())
+                    progressDialog.dismiss();
+
+                android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(LoginActivity.this);
+                builder.setTitle("Login Failed.");
+                builder.setMessage("Login Failed. Please check your username and password!");
+                builder.setPositiveButton("Ok", null);
+
+                android.support.v7.app.AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+
+            else if(result.equals("login success")){
+                Intent Homeintent = new Intent(LoginActivity.this, MainActivity.class);
+                LOGGED_IN_USER = userName;
+                startActivity(Homeintent);
+            }
+
+            //else allow user to login and continue
+            else {
+                if (progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                    LOGGED_IN_USER = userName;
+                }
+            }
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+        }
 
     }
 
@@ -55,3 +220,4 @@ public class LoginActivity extends AppCompatActivity {
         startActivity(intentForgotPswd);
     }
 }
+
