@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
+import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,11 +31,13 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText editTextUsername, editTextPassword;
     TextView textViewForgotPassword, textViewRegister;
-    ImageButton imageButtonLogin;
+    ImageButton imageButtonLogin, imageButtonVisiblePswd;
 
     public  static  String LOGGED_IN_USER = "LOGGED_IN_USER";
-    String userName;
+    public  static  String LOGGED_IN_PSWD = "LOGGED_IN_PSWD";
+    String userName, PassWord;
     ProgressDialog progressDialog;
+    int test = 0;
     //  protected static Context context;
 
     @Override
@@ -50,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         textViewForgotPassword = (TextView)findViewById(R.id.textViewForgotPassword);
         textViewRegister = (TextView)findViewById(R.id.textViewRegister);
         imageButtonLogin = (ImageButton)findViewById(R.id.imageButtonLogin);
+        imageButtonVisiblePswd = (ImageButton)findViewById(R.id.imageButtonVisiblePswd);
 
         textViewRegister.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,13 +77,30 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+        imageButtonVisiblePswd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickVisible(v);
+            }
+        });
+
 
 
     }
 
+    public void onClickVisible(View v){
+        if (test == 0){
+            editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+            test = 1;
+        }else if (test == 1){
+            editTextPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            test = 0;
+        }
+    }
+
     public void onClickLogin(View v){
         userName = editTextUsername.getText().toString();
-        String PassWord = editTextPassword.getText().toString();
+        PassWord = editTextPassword.getText().toString();
         String type = "login";
 
         if (editTextUsername.getText().toString().equals("") && editTextPassword.getText().toString().equals("")) {
@@ -199,6 +221,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (progressDialog.isShowing()) {
                     progressDialog.dismiss();
                     LOGGED_IN_USER = userName;
+                    LOGGED_IN_PSWD = PassWord;
                 }
             }
         }
@@ -216,7 +239,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onClickForgotPassword(View v){
-        Intent intentForgotPswd = new Intent(this, ForgotPasswordActivity.class);
+        //Intent intentForgotPswd = new Intent(this, ForgotPasswordActivity.class);
+        Intent intentForgotPswd = new Intent(this, ViewProfileActivity.class);
         startActivity(intentForgotPswd);
     }
 }
