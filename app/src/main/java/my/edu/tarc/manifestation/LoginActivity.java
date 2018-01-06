@@ -239,8 +239,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void onClickForgotPassword(View v){
-        //Intent intentForgotPswd = new Intent(this, ForgotPasswordActivity.class);
-        Intent intentForgotPswd = new Intent(this, ViewProfileActivity.class);
+        Intent intentForgotPswd = new Intent(this, ForgotPasswordActivity.class);
+        //Intent intentForgotPswd = new Intent(this, ViewProfileActivity.class);
         startActivity(intentForgotPswd);
     }
 }

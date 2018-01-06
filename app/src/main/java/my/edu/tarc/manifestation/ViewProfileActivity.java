@@ -60,7 +60,7 @@ public class ViewProfileActivity extends AppCompatActivity {
         editTextName.setEnabled(false);
         editTextEmail.setEnabled(false);
         editTextDOB.setEnabled(false);
-
+        imageButtonSubmit.setEnabled(false);
         //Declare all local variables
         String typeUserDetails = "retrieveUserDetails";
         String username = LoginActivity.LOGGED_IN_USER;
@@ -121,6 +121,8 @@ public class ViewProfileActivity extends AppCompatActivity {
         editTextName.setEnabled(true);
         editTextEmail.setEnabled(true);
         editTextDOB.setEnabled(true);
+        imageButtonSubmit.setEnabled(true);
+        imageButtonEdit.setEnabled(false);
     }
 
     private void onClickSubmit(View v) {
@@ -168,6 +170,8 @@ public class ViewProfileActivity extends AppCompatActivity {
         editTextName.setEnabled(false);
         editTextEmail.setEnabled(false);
         editTextDOB.setEnabled(false);
+        imageButtonSubmit.setEnabled(false);
+        imageButtonEdit.setEnabled(true);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Notice");
